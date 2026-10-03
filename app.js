@@ -44,10 +44,19 @@ var toastRoot = document.getElementById("toast-root");
 
 /* ================= API ================= */
 var API = {
+  _jsonpCounter: 0,
   get: function (action, params) {
-    var qs = "action=" + encodeURIComponent(action);
-    for (var k in (params || {})) qs += "&" + k + "=" + encodeURIComponent(params[k]);
-    return fetch(API_URL + "?" + qs).then(function (r) { return r.json(); });
+    return new Promise(function (resolve, reject) {
+      var cbName = "rkr_cb_" + (API._jsonpCounter++) + "_" + Date.now();
+      var qs = "action=" + encodeURIComponent(action) + "&callback=" + cbName;
+      for (var k in (params || {})) qs += "&" + k + "=" + encodeURIComponent(params[k]);
+      window[cbName] = function (data) { resolve(data); cleanup(); };
+      var script = document.createElement("script");
+      script.src = API_URL + "?" + qs;
+      script.onerror = function () { reject(new Error("โหลดข้อมูลไม่สำเร็จ")); cleanup(); };
+      function cleanup(){ delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+      document.body.appendChild(script);
+    });
   },
   post: function (payload) {
     // text/plain avoids a CORS preflight that Apps Script web apps don't answer
