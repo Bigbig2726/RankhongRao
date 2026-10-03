@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ร้านของเรา POS</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=Sarabun:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brandmark"><span class="th">ร้านของเรา</span><span class="en">RAN-KHONG-RAO · POS</span></div>
+  <nav class="tabs" role="tablist" aria-label="เมนูระบบ">
+    <button class="tab-btn" data-tab="pos" role="tab">ขาย</button>
+    <button class="tab-btn" data-tab="inventory" role="tab">สต๊อก</button>
+    <button class="tab-btn" data-tab="reports" role="tab">รายงาน</button>
+    <button class="tab-btn" data-tab="manage" role="tab">จัดการเมนู</button>
+  </nav>
+</div>
+<main id="view"><div class="loading">กำลังโหลดข้อมูลร้าน…</div></main>
+<div id="toast-root"></div>
+<div id="modal-root"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
