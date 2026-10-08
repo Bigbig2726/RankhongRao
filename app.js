@@ -74,7 +74,17 @@ var API = {
   deleteIngredient: function (id) { return API.post({action:"deleteIngredient", id:id}); },
   upsertMenuItem: function (body) { return API.post(Object.assign({action:"upsertMenuItem"}, body)); },
   deleteMenuItem: function (id) { return API.post({action:"deleteMenuItem", id:id}); },
-  uploadImage: function (dataUrl, filename) { return API.post({action:"uploadImage", dataUrl:dataUrl, filename:filename}); }
+  uploadImage: function (dataUrl, filename) { return API.post({action:"uploadImage", dataUrl:dataUrl, filename:filename}); },
+  uploadImageAndSaveMenuItem: function (payload) {
+    // รูปภาพมีขนาดใหญ่เกินกว่าจะส่งผ่าน URL (JSONP) ได้ จึงใช้ fetch แบบ no-cors แทน
+    // (อ่านผลตอบกลับไม่ได้ แต่ส่งข้อมูลก้อนใหญ่ได้ — รีเฟรชข้อมูลเองหลังส่งแทนการอ่านผล)
+    return fetch(API_URL, {
+      method: "POST",
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
+      mode: "no-cors",
+      body: JSON.stringify(Object.assign({action:"uploadImageAndSaveMenuItem"}, payload))
+    });
+  }
 };
 
 function esc(s){
@@ -661,40 +671,39 @@ function openMenuModal(menuItemId){
     var recipe = menuRecipeDraft.filter(function(r){ return r.ingredientId && r.qty>0; });
     var btn = document.getElementById("menu-save");
     btn.disabled = true; btn.textContent = "กำลังบันทึก…";
-
+     
     function withImageUrl(){
-      if (menuImageDraft.newFile){
-        return fileToDataUrl(menuImageDraft.newFile).then(function(dataUrl){
-          return API.uploadImage(dataUrl, menuImageDraft.newFile.name).then(function(res){
-            if (res && res.ok) return res.url;
-            toast("อัปโหลดรูปไม่สำเร็จ แต่จะบันทึกข้อมูลอื่นให้ก่อน");
-            return menuImageDraft.currentUrl;
-          });
+    if (menuImageDraft.newFile){
+      fileToDataUrl(menuImageDraft.newFile).then(function(dataUrl){
+        return API.uploadImageAndSaveMenuItem({
+          id: editing ? menuItemId : undefined,
+          name:name, category:category, price:price, recipe:recipe,
+          dataUrl: dataUrl, filename: menuImageDraft.newFile.name
         });
-      }
-      if (menuImageDraft.removed) return Promise.resolve("");
-      return Promise.resolve(undefined); // unchanged — let backend keep existing imageUrl
+      }).then(function(){
+        closeModal();
+        setTimeout(loadCore, 1500);
+        toast(editing ? "แก้ไขเมนูแล้ว" : "เพิ่มเมนูแล้ว");
+      }).catch(function(err){
+        console.error(err);
+        btn.disabled=false; btn.textContent = editing?"บันทึกการแก้ไข":"เพิ่มเมนู";
+        toast("บันทึกไม่สำเร็จ ลองอีกครั้ง");
+      });
+    } else {
+      var payload = { id: editing ? menuItemId : undefined, name:name, category:category, price:price, recipe:recipe };
+      if (menuImageDraft.removed) payload.imageUrl = "";
+      API.upsertMenuItem(payload).then(function(res){
+        if (!res || res.ok === false) throw new Error((res && res.error) || "failed");
+        closeModal();
+        loadCore();
+        toast(editing ? "แก้ไขเมนูแล้ว" : "เพิ่มเมนูแล้ว");
+      }).catch(function(err){
+        console.error(err);
+        btn.disabled=false; btn.textContent = editing?"บันทึกการแก้ไข":"เพิ่มเมนู";
+        toast("บันทึกไม่สำเร็จ ลองอีกครั้ง");
+      });
     }
-
-    withImageUrl().then(function(imageUrl){
-      var payload = {
-        id: editing ? menuItemId : undefined,
-        name:name, category:category, price:price, recipe:recipe
-      };
-      if (imageUrl !== undefined) payload.imageUrl = imageUrl;
-      return API.upsertMenuItem(payload);
-    }).then(function(res){
-      if (!res || res.ok === false) throw new Error((res && res.error) || "failed");
-      closeModal();
-      loadCore();
-      toast(editing ? "แก้ไขเมนูแล้ว" : "เพิ่มเมนูแล้ว");
-    }).catch(function(err){
-      console.error(err);
-      btn.disabled=false; btn.textContent = editing?"บันทึกการแก้ไข":"เพิ่มเมนู";
-      toast("บันทึกไม่สำเร็จ ลองอีกครั้ง");
-    });
   });
-}
 function fileToDataUrl(file){
   return new Promise(function(resolve, reject){
     var reader = new FileReader();
