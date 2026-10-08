@@ -5,7 +5,7 @@
    (ดูวิธี deploy ใน README.md) ตัวอย่าง:
    "https://script.google.com/macros/s/AKfycb.../exec"
    ===================================================================== */
-var API_URL = "https://script.google.com/macros/s/AKfycbwDVJgrQGHqLambu7apEqv6MzQOFMEx8xVbhb0k5-sDsNnhAvrCa7YX-eGuK2qsBrQ5HQ/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbzRSh-QbdYD0OC_M95O-2dgFI0qwwSKdKYUq5KIXbe3SrVE5lyBdADpA9SGo0nXIAP1/exec";
 
 var CATS = ["โจ๊ก","ไข่กระทะ","ขนมปังปิ้ง","ของทอด","ไอติมทอด","กาแฟโบราณ"];
 var ORDER_TYPES = [
