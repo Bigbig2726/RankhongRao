@@ -43,6 +43,8 @@ var modalRoot = document.getElementById("modal-root");
 var toastRoot = document.getElementById("toast-root");
 
 /* ================= API ================= */
+/* ใช้ JSONP (แทก <script>) สำหรับการอ่าน/เขียนข้อมูลทั่วไป เพราะ Apps Script ไม่ส่ง CORS header
+   ส่วนการอัปโหลดรูป (ข้อมูลใหญ่เกินกว่าจะใส่ใน URL) ใช้ fetch แบบ no-cors แทน */
 var API = {
   _jsonpCounter: 0,
   _jsonp: function (action, params) {
@@ -671,8 +673,7 @@ function openMenuModal(menuItemId){
     var recipe = menuRecipeDraft.filter(function(r){ return r.ingredientId && r.qty>0; });
     var btn = document.getElementById("menu-save");
     btn.disabled = true; btn.textContent = "กำลังบันทึก…";
-     
-    function withImageUrl(){
+
     if (menuImageDraft.newFile){
       fileToDataUrl(menuImageDraft.newFile).then(function(dataUrl){
         return API.uploadImageAndSaveMenuItem({
@@ -704,6 +705,7 @@ function openMenuModal(menuItemId){
       });
     }
   });
+}
 function fileToDataUrl(file){
   return new Promise(function(resolve, reject){
     var reader = new FileReader();
